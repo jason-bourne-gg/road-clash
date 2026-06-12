@@ -13,6 +13,9 @@ export interface MenuHandlers {
   rematch(): void;
   resume(): void;   // continue a paused race
   toMenu(): void;
+  toggleVoice(): void;  // enable/disable mic broadcast in a room
+  toggleMic(): void;    // mute/unmute the mic
+  voiceState(): { supported: boolean; enabled: boolean; muted: boolean };
 }
 
 type Screen = 'title' | 'multi' | 'lobby' | 'settings' | 'howto' | 'pause' | 'finished';
@@ -132,6 +135,8 @@ export class Menu {
       case 'resume': this.h.resume(); break;
       case 'home': this.h.toMenu(); break;
       case 'menu': this.h.toMenu(); break;
+      case 'voice': this.h.toggleVoice(); break;
+      case 'mic': this.h.toggleMic(); break;
     }
   }
 
@@ -158,6 +163,7 @@ export class Menu {
       case 'throttle': { const o = ['auto', 'on', 'off'] as const; S.throttle = o[wrap(o.indexOf(S.throttle), 3)]; break; }
       case 'graphics': { const o = ['auto', 'high', 'medium', 'low'] as const; S.graphics = o[wrap(o.indexOf(S.graphics), 4)]; resizeCanvas(); break; }
       case 'sound': S.sound = !S.sound; break;
+      case 'music': S.music = !S.music; break;
     }
     saveSettings();
     this.render();
@@ -240,6 +246,7 @@ export class Menu {
         <ul>
           <li><b>Create a room</b> → share the code or link. Friends pick <b>JOIN</b> and enter it.</li>
           <li>The <b>host</b> starts the race; empty slots are filled by AI riders.</li>
+          <li><b>Voice chat</b> — enable it in the lobby to talk to your room; mute with the <kbd>V</kbd> key.</li>
         </ul>
       </div>
       <button class="ghost" data-act="back">BACK</button>`;
@@ -254,10 +261,21 @@ export class Menu {
       <button class="mini" data-act="copy">copy link</button>
       <p class="sub">share the code or link · friends pick JOIN and enter it</p>
       <ul class="players">${items}</ul>
+      ${this.voiceControls()}
       ${d.isHost
         ? `<button data-act="start">START RACE</button>`
         : `<p class="hint waiting">waiting for host to start…</p>`}
       <button class="ghost" data-act="leave">LEAVE</button>`;
+  }
+
+  private voiceControls(): string {
+    const v = this.h.voiceState();
+    if (!v.supported) return '<p class="hint">🎤 voice needs a mic on a secure (https) page</p>';
+    if (!v.enabled) return '<button class="ghost" data-act="voice">🎤 ENABLE VOICE CHAT</button>';
+    return `<div class="row">
+      <button class="ghost" data-act="voice">🎤 VOICE ON</button>
+      <button data-act="mic">${v.muted ? '🔇 UNMUTE MIC' : '🎙 MUTE MIC'}</button>
+    </div>`;
   }
 
   private settingsBody(): string {
@@ -271,6 +289,7 @@ export class Menu {
       ['GRAPHICS', { auto: 'AUTO', high: 'HIGH', medium: 'MEDIUM', low: 'LOW' }[S.graphics], 'graphics'],
       ['THROTTLE', { auto: 'AUTO', on: 'ALWAYS ON', off: 'MANUAL' }[S.throttle], 'throttle'],
       ['SOUND', S.sound ? 'ON' : 'OFF', 'sound'],
+      ['MUSIC', S.music ? 'ON' : 'OFF', 'music'],
     ];
     const html = rows.map(([label, val, key]) => `
       <div class="set-row" tabindex="0" data-setrow="${key}">

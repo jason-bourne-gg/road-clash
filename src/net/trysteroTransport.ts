@@ -17,6 +17,7 @@ export class TrysteroTransport implements Transport {
   private msgCb: MessageHandler = () => {};
   private joinCb: PeerHandler = () => {};
   private leaveCb: PeerHandler = () => {};
+  private streamCb: ((s: MediaStream, peer: string) => void) | null = null;
 
   async connect(roomCode: string): Promise<void> {
     const room = joinRoom({ appId: APP_ID }, roomCode);
@@ -40,6 +41,7 @@ export class TrysteroTransport implements Transport {
     getSt((data, peer) => receive(data, peer));
     room.onPeerJoin((peer) => this.joinCb(peer));
     room.onPeerLeave((peer) => this.leaveCb(peer));
+    room.onPeerStream((stream, peer) => this.streamCb?.(stream, peer));
   }
 
   send(msg: NetMessage): void { this.sendEv?.(msg); }
@@ -47,6 +49,11 @@ export class TrysteroTransport implements Transport {
   onMessage(cb: MessageHandler): void { this.msgCb = cb; }
   onPeerJoin(cb: PeerHandler): void { this.joinCb = cb; }
   onPeerLeave(cb: PeerHandler): void { this.leaveCb = cb; }
+
+  // --- voice chat media streams ---
+  addStream(stream: MediaStream): void { this.room?.addStream(stream); }
+  removeStream(stream: MediaStream): void { this.room?.removeStream(stream); }
+  onPeerStream(cb: (s: MediaStream, peer: string) => void): void { this.streamCb = cb; }
 
   peers(): string[] {
     return this.room ? Object.keys(this.room.getPeers()) : [];

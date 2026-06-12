@@ -46,7 +46,49 @@ export function ensureAudio(): void {
       o.detune.value = (Math.random() - 0.5) * 8; o.connect(padFilt); o.start();
     }
     padFilt.connect(padGain); padGain.connect(AC.destination);
+    musicGain = AC.createGain(); musicGain.gain.value = 0; musicGain.connect(AC.destination);
   } catch { AC = null; }
+}
+
+// ---- procedural synthwave loop (background music) ----
+let musicGain: GainNode | null = null;
+let musicTimer: ReturnType<typeof setInterval> | null = null;
+let musicStep = 0;
+
+function blip(freq: number, dur: number, type: OscillatorType, vol: number): void {
+  if (!AC || !musicGain) return;
+  const o = AC.createOscillator(), g = AC.createGain();
+  o.type = type; o.frequency.value = freq;
+  g.gain.setValueAtTime(vol, AC.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.0001, AC.currentTime + dur);
+  o.connect(g); g.connect(musicGain);
+  o.start(); o.stop(AC.currentTime + dur + 0.02);
+}
+function tick(): void {
+  const bar = Math.floor(musicStep / 4) % 4;
+  const beat = musicStep % 4;
+  const roots = [110, 87.31, 130.81, 98.0];                 // Am · F · C · G bass
+  const triad = [[0, 3, 7], [0, 4, 7], [0, 4, 7], [0, 4, 7]];
+  const root = roots[bar];
+  blip(root, 0.24, 'sawtooth', 0.05);                        // bass
+  if (beat === 0 || beat === 2) blip(55, 0.12, 'sine', 0.09);// kick
+  const arp = root * 4 * Math.pow(2, triad[bar][beat % 3] / 12);
+  blip(arp, 0.18, 'triangle', 0.028);                        // soft arp
+  musicStep = (musicStep + 1) % 16;
+}
+
+// Idempotent — call freely; self-regulates on the music setting + mute.
+export function startMusic(): void {
+  if (!AC || !musicGain) return;
+  if (!S.sound || !S.music || muted) { stopMusic(); return; }
+  if (musicTimer != null) return;
+  musicStep = 0;
+  musicGain.gain.setTargetAtTime(0.5, AC.currentTime, 0.5);
+  musicTimer = setInterval(tick, 150);                       // ~100 BPM sixteenths
+}
+export function stopMusic(): void {
+  if (musicTimer != null) { clearInterval(musicTimer); musicTimer = null; }
+  if (musicGain && AC) musicGain.gain.setTargetAtTime(0, AC.currentTime, 0.3);
 }
 
 // Fade the pause pad in/out. Engine + wind are silenced separately while paused.

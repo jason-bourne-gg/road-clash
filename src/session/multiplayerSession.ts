@@ -6,6 +6,7 @@ import { makeRemoteRider, makeAiRider } from '../entities/riders';
 import { captureSnapshot, pushSample, applyInterpolated } from '../net/snapshot';
 import { crashPlayer } from '../engine/physics';
 import { randomSeed } from '../core/rng';
+import { VoiceManager } from '../net/voice';
 import type { Transport } from '../net/transport';
 import type { NetMessage, PlayerInfo, Rider } from '../core/types';
 
@@ -25,6 +26,8 @@ export class MultiplayerSession extends Session {
   private playersById = new Map<string, PlayerInfo>(); // remote peers only
   private sendAcc = 0;
 
+  readonly voice: VoiceManager;
+
   // UI hooks
   onLobbyChange: () => void = () => {};
   onStarted: () => void = () => {};
@@ -34,6 +37,7 @@ export class MultiplayerSession extends Session {
     this.transport = transport;
     this.me = { ...me, id: transport.id };
     this.isHost = isHost;
+    this.voice = new VoiceManager(transport);
   }
 
   async connect(roomCode: string): Promise<void> {
@@ -42,6 +46,7 @@ export class MultiplayerSession extends Session {
     this.transport.onPeerLeave((peer) => {
       this.playersById.delete(peer);
       world.riders = world.riders.filter(r => r.id !== peer);
+      this.voice.dropPeer(peer);
       this.onLobbyChange();
     });
     await this.transport.connect(roomCode);
@@ -128,6 +133,7 @@ export class MultiplayerSession extends Session {
   }
 
   end(): void {
+    this.voice.cleanup();
     this.transport.disconnect();
     world.game.state = 'menu';
   }

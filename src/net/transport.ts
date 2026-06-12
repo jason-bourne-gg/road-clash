@@ -16,4 +16,8 @@ export interface Transport {
   onPeerLeave(cb: PeerHandler): void;
   peers(): string[];
   disconnect(): void;
+  // Optional media streaming (voice chat). A relay transport may omit these.
+  addStream?(stream: MediaStream): void;
+  removeStream?(stream: MediaStream): void;
+  onPeerStream?(cb: (stream: MediaStream, peerId: string) => void): void;
 }

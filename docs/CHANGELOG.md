@@ -3,6 +3,14 @@
 All notable changes to Road Clash, newest first. Format follows
 [Keep a Changelog](https://keepachangelog.com/); versions are [SemVer](https://semver.org/).
 
+## [2.3.0] — 2026-06-13 · Voice chat & music
+
+### Added
+- **🎙️ In-room voice chat** — talk to the people in your multiplayer room, carried over the same WebRTC connection as the game data (no extra server). Strictly **opt-in**: enable it in the lobby ("🎤 ENABLE VOICE CHAT"), mute/unmute with the lobby button or the **V** key mid-race. Echo cancellation + noise suppression on.
+- **🎵 Background music** — a procedural synthwave loop (bass + arp + kick) layered under the engine/SFX during races, with its own **MUSIC** on/off setting (independent of SFX).
+
+[2.3.0]: https://github.com/jason-bourne-gg/road-clash
+
 ## [2.2.0] — 2026-06-13 · Gameplay engine pass
 
 ### Added

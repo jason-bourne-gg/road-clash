@@ -10,6 +10,7 @@ export interface Settings {
   season: number;     // 0 summer, 1 winter, 2 rainy
   graphics: 'auto' | 'high' | 'medium' | 'low';
   sound: boolean;
+  music: boolean;
 }
 
 // Code defaults. The settings UI overrides these and persists to localStorage,
@@ -24,6 +25,7 @@ const CONFIG: Settings = {
   season: 0,
   graphics: 'auto',
   sound: true,
+  music: true,
 };
 const KEY = 'roadclash2';
 
@@ -45,6 +47,7 @@ function sanitize(s: Settings): Settings {
   s.colorIdx = (((s.colorIdx | 0) % BIKE_COLORS.length) + BIKE_COLORS.length) % BIKE_COLORS.length;
   s.police = !!s.police;
   s.sound = !!s.sound;
+  s.music = !!s.music;
   return s;
 }
 
