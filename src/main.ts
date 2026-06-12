@@ -1,4 +1,6 @@
 import { installErrorHandlers, showErrorScreen } from './core/errors';
+import { inject } from '@vercel/analytics';
+import { injectSpeedInsights } from '@vercel/speed-insights';
 import { ctx } from './core/view';
 import { MAX_SPEED, BIKE_COLORS } from './core/constants';
 import { world, input, setMsg } from './core/state';
@@ -21,6 +23,8 @@ import { TrysteroTransport } from './net/trysteroTransport';
 import type { PlayerInfo } from './core/types';
 
 installErrorHandlers();   // catch anything uncaught before it reaches the user
+inject();                 // Vercel Web Analytics (no-op when not on Vercel)
+injectSpeedInsights();    // Vercel Speed Insights (real-user performance)
 
 const uiRoot = document.getElementById('ui-root') as HTMLElement;
 

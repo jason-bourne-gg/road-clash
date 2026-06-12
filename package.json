@@ -19,6 +19,8 @@
     "wrangler": "^3.95.0"
   },
   "dependencies": {
+    "@vercel/analytics": "^2.0.1",
+    "@vercel/speed-insights": "^2.0.0",
     "trystero": "^0.21.5"
   }
 }
