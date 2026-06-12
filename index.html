@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="icon" type="image/svg+xml" href="./favicon.svg">
+<title>Road Clash — a Road Rash tribute</title>
+<style>
+  :root { --neon:#ffd23b; --pink:#f2b4ff; --ink:#0b0714; }
+  html,body{margin:0;height:100%;background:var(--ink);overflow:hidden;
+    font-family:"SF Mono",ui-monospace,Menlo,monospace;color:#fff}
+  #stage{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
+  canvas{box-shadow:0 0 60px #000;max-width:100vw;max-height:100vh;
+    touch-action:none;user-select:none;-webkit-user-select:none;image-rendering:auto}
+  /* menu overlay sits exactly over the canvas via #ui-root, populated by ui/menu.js */
+  #ui-root{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    pointer-events:none}
+  #ui-root.show{pointer-events:auto}
+</style>
+</head>
+<body>
+  <div id="stage">
+    <canvas id="c" width="1024" height="576"></canvas>
+    <div id="ui-root"></div>
+  </div>
+  <script>
+    // Catastrophic fallback: if the game bundle never boots (load/parse failure),
+    // show a reload prompt instead of a blank page. The in-app handler takes
+    // over for everything after boot.
+    setTimeout(function () {
+      if (!window.__rc && !document.getElementById('error-root')) {
+        document.body.insertAdjacentHTML('beforeend',
+          '<div style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;' +
+          'background:#0b0714;color:#fff;font-family:monospace;text-align:center;z-index:9999">' +
+          '<div><h2 style="color:#ff5b4a">Couldn\'t load Road Clash</h2>' +
+          '<p>Please check your connection and reload.</p>' +
+          '<button onclick="location.reload()" style="padding:12px 26px;font-weight:700;' +
+          'background:#ffd23b;border:none;border-radius:11px;cursor:pointer">RELOAD</button></div></div>');
+      }
+    }, 6000);
+  </script>
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>
