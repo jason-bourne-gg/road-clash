@@ -10,8 +10,10 @@
   html,body{margin:0;height:100%;background:var(--ink);overflow:hidden;
     font-family:"SF Mono",ui-monospace,Menlo,monospace;color:#fff}
   #stage{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
-  canvas{box-shadow:0 0 60px #000;max-width:100vw;max-height:100vh;
-    touch-action:none;user-select:none;-webkit-user-select:none;image-rendering:auto}
+  /* Scale the 16:9 canvas to the largest size that fits the viewport (fills the
+     window; only letterboxes the axis that doesn't match 16:9). */
+  canvas{box-shadow:0 0 60px #000;width:100vw;height:56.25vw;max-width:177.78vh;max-height:100vh;
+    display:block;touch-action:none;user-select:none;-webkit-user-select:none;image-rendering:auto}
   /* menu overlay sits exactly over the canvas via #ui-root, populated by ui/menu.js */
   #ui-root{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
     pointer-events:none}

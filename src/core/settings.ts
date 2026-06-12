@@ -8,6 +8,7 @@ export interface Settings {
   throttle: 'auto' | 'on' | 'off';
   colorIdx: number;
   season: number;     // 0 summer, 1 winter, 2 rainy
+  graphics: 'auto' | 'high' | 'medium' | 'low';
   sound: boolean;
 }
 
@@ -21,6 +22,7 @@ const CONFIG: Settings = {
   throttle: 'auto',
   colorIdx: 0,
   season: 0,
+  graphics: 'auto',
   sound: true,
 };
 const KEY = 'roadclash2';
@@ -39,6 +41,7 @@ function sanitize(s: Settings): Settings {
   s.traffic = clamp02(s.traffic);
   if (![2, 3, 5].includes(s.laps)) s.laps = 3;
   if (!['auto', 'on', 'off'].includes(s.throttle)) s.throttle = 'auto';
+  if (!['auto', 'high', 'medium', 'low'].includes(s.graphics)) s.graphics = 'auto';
   s.colorIdx = (((s.colorIdx | 0) % BIKE_COLORS.length) + BIKE_COLORS.length) % BIKE_COLORS.length;
   s.police = !!s.police;
   s.sound = !!s.sound;

@@ -81,18 +81,15 @@ npm run build       # production bundle → dist/
 npm run preview     # serve the production build
 ```
 
-## 🚀 Deploy (Cloudflare Pages)
+## 🚀 Deploy (Vercel)
 
-Connect the repo in the Cloudflare Pages dashboard with build command `npm run build` and output directory `dist` — every push deploys. Or push directly from the terminal:
-
-```bash
-npm run deploy      # builds, then wrangler pages deploy dist  (after `wrangler login`)
-```
+Hosted on **Vercel** — import the repo once (Add New → Project), it auto-detects Vite (build `npm run build`, output `dist`), and **every push to `main` auto-deploys**. No CLI or config needed. Cloudflare Pages works equally well (same build command + `dist` output) if you prefer.
 
 ## 📚 Docs
 
 - [docs/FEATURES.md](docs/FEATURES.md) — complete feature list (+ what's deferred)
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — module map, seams, netcode, extension recipes
+- [docs/CHANGELOG.md](docs/CHANGELOG.md) — release notes / version history
 
 ## 📄 License
 

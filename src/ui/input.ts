@@ -27,12 +27,24 @@ function refreshTouch(): void {
 
 const RACE_KEYS = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space', 'KeyA'];
 
+const isTyping = (): boolean => {
+  const t = document.activeElement?.tagName;
+  return t === 'INPUT' || t === 'TEXTAREA';
+};
+
+function toggleFullscreen(): void {
+  if (!document.fullscreenElement) document.documentElement.requestFullscreen?.().catch(() => { /* */ });
+  else document.exitFullscreen?.();
+}
+
 export function initInput(): void {
   addEventListener('keydown', (e) => {
     if (RACE_KEYS.includes(e.code)) e.preventDefault();
     input.KEYS[e.code] = true;
     ensureAudio();
+    if (isTyping()) return;   // don't hijack M/F while typing a name/room code
     if (e.code === 'KeyM') { S.sound = !S.sound; setMuted(!S.sound); saveSettings(); }
+    if (e.code === 'KeyF') toggleFullscreen();
   });
   addEventListener('keyup', (e) => { input.KEYS[e.code] = false; });
   addEventListener('blur', () => { for (const k in input.KEYS) input.KEYS[k] = false; });

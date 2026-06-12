@@ -1,4 +1,5 @@
 import { clamp } from '../core/math';
+import { gfx } from './quality';
 
 interface Particle {
   x: number; y: number; vx: number; vy: number; g: number;
@@ -22,7 +23,8 @@ export function emit(x: number, y: number, n: number, o: EmitOpts): void {
       size: o.size * (0.5 + Math.random()), color: o.color,
     });
   }
-  if (parts.length > 320) parts.splice(0, parts.length - 320);
+  const cap = gfx().particleCap;
+  if (parts.length > cap) parts.splice(0, parts.length - cap);
 }
 
 export function updateParts(dt: number): void {

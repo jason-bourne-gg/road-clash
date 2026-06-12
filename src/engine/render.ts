@@ -11,6 +11,7 @@ import { drawBike, drawCarBody } from './sprites';
 import { poly, rrect, line } from './draw2d';
 import { emit } from './particles';
 import { activeSeason } from './seasons';
+import { gfx } from './quality';
 import type { Segment, Point, Rider, Cop, Traffic, RoadSprite, Season } from '../core/types';
 
 // Background parallax offset, advanced by physics, read here.
@@ -45,6 +46,14 @@ export function renderBackground(): void {
     sg.addColorStop(0, sea.sunGlow + '0.95)'); sg.addColorStop(0.25, sea.sunGlow + '0.5)'); sg.addColorStop(1, sea.sunGlow + '0)');
     ctx.fillStyle = sg; ctx.beginPath(); ctx.arc(sx, sy, 180, 0, 7); ctx.fill();
     ctx.fillStyle = sea.sun; ctx.beginPath(); ctx.arc(sx, sy, 46, 0, 7); ctx.fill();
+    // Bloom: a wide additive warm glow that bleeds across the sky (high tier).
+    if (gfx().bloom) {
+      ctx.save(); ctx.globalCompositeOperation = 'lighter';
+      const bgGlow = ctx.createRadialGradient(sx, sy, 30, sx, sy, 340);
+      bgGlow.addColorStop(0, sea.sunGlow + '0.30)'); bgGlow.addColorStop(1, sea.sunGlow + '0)');
+      ctx.fillStyle = bgGlow; ctx.fillRect(0, 0, W, H * 0.62);
+      ctx.restore();
+    }
   }
   const cloudCol = sea.id === 'rainy' ? 'rgba(120,130,140,0.45)' : sea.id === 'winter' ? 'rgba(220,228,240,0.4)' : 'rgba(245,190,200,0.30)';
   for (const c of CLOUDS) {
@@ -255,14 +264,20 @@ export function renderPlayer(): void {
 
 /* ---------------- full-screen effects ---------------- */
 export function renderSpeedLines(spct: number): void {
-  if (spct < 0.78) return;
-  const a = (spct - 0.78) * 4.5;
-  ctx.strokeStyle = 'rgba(255,255,255,' + (0.22 * clamp(a, 0, 1)) + ')';
+  if (spct < 0.55) return;
+  const a = clamp((spct - 0.55) * 2.6, 0, 1);   // ramps in earlier and fuller
+  // Speed vignette — edges darken as you approach top speed (tunnel-vision rush).
+  const sv = ctx.createRadialGradient(W / 2, H / 2, H * (0.5 - 0.12 * a), W / 2, H / 2, H * 0.95);
+  sv.addColorStop(0, 'rgba(0,0,0,0)'); sv.addColorStop(1, 'rgba(0,0,0,' + (0.28 * a) + ')');
+  ctx.fillStyle = sv; ctx.fillRect(0, 0, W, H);
+  // Streaks raking past from the screen edges.
+  ctx.strokeStyle = 'rgba(255,255,255,' + (0.26 * a) + ')';
   ctx.lineWidth = 2;
-  for (let i = 0; i < 10; i++) {
-    const sy = Math.random() * H * 0.55;
+  const count = 10 + Math.floor(8 * a);
+  for (let i = 0; i < count; i++) {
+    const sy = Math.random() * H * 0.6;
     const side = i % 2, x0 = side ? W : 0;
-    const len = (60 + Math.random() * 140) * clamp(a, 0, 1);
+    const len = (60 + Math.random() * 180) * a;
     line(x0, sy, x0 + (side ? -len : len), sy + (sy - H * 0.4) * 0.06);
   }
 }
@@ -271,10 +286,23 @@ export function renderWeather(): void {
   const w = activeSeason().weather;
   if (!w) return;
   const t = world.worldT;
+  const q = gfx();
   if (w === 'rain') {
+    // Wet-road sheen + lightning (reflections tier only).
+    if (q.reflections) {
+      const sheen = ctx.createLinearGradient(0, H * 0.62, 0, H);
+      sheen.addColorStop(0, 'rgba(150,170,200,0.10)'); sheen.addColorStop(1, 'rgba(150,170,200,0)');
+      ctx.fillStyle = sheen; ctx.fillRect(0, H * 0.62, W, H * 0.38);
+      // Double-flash roughly every 9s.
+      const ph = t % 9;
+      const flash = ph < 0.10 ? 1 - ph / 0.10 : (ph > 0.22 && ph < 0.34 ? 1 - (ph - 0.22) / 0.12 : 0);
+      if (flash > 0) { ctx.fillStyle = 'rgba(210,225,255,' + (0.5 * flash) + ')'; ctx.fillRect(0, 0, W, H); }
+    }
     ctx.strokeStyle = 'rgba(170,200,230,0.35)'; ctx.lineWidth = 1.4; ctx.lineCap = 'round';
     ctx.beginPath();
-    for (const d of RAIN) {
+    const n = Math.floor(RAIN.length * q.weatherDensity);
+    for (let i = 0; i < n; i++) {
+      const d = RAIN[i];
       const y = (d.y + t * d.sp) % H;
       const x = (d.x - t * d.sp * 0.15) % W;
       ctx.moveTo(x, y); ctx.lineTo(x - 3, y + d.len);
@@ -282,7 +310,9 @@ export function renderWeather(): void {
     ctx.stroke();
   } else {
     ctx.fillStyle = 'rgba(255,255,255,0.85)';
-    for (const f of SNOW) {
+    const n = Math.floor(SNOW.length * q.weatherDensity);
+    for (let i = 0; i < n; i++) {
+      const f = SNOW[i];
       const y = (f.y + t * f.sp) % H;
       const x = (f.x + Math.sin(t * 0.6 + f.ph) * f.drift + W) % W;
       ctx.beginPath(); ctx.arc(x, y, f.r, 0, 7); ctx.fill();

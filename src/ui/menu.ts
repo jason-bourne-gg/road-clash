@@ -1,6 +1,7 @@
 import { S, saveSettings } from '../core/settings';
 import { BIKE_COLORS, DIFFS } from '../core/constants';
 import { SEASONS } from '../engine/seasons';
+import { resizeCanvas } from '../core/view';
 import type { PlayerInfo } from '../core/types';
 
 export interface MenuHandlers {
@@ -155,6 +156,7 @@ export class Menu {
       case 'bike': S.colorIdx = wrap(S.colorIdx, BIKE_COLORS.length); break;
       case 'season': S.season = wrap(S.season, SEASONS.length); break;
       case 'throttle': { const o = ['auto', 'on', 'off'] as const; S.throttle = o[wrap(o.indexOf(S.throttle), 3)]; break; }
+      case 'graphics': { const o = ['auto', 'high', 'medium', 'low'] as const; S.graphics = o[wrap(o.indexOf(S.graphics), 4)]; resizeCanvas(); break; }
       case 'sound': S.sound = !S.sound; break;
     }
     saveSettings();
@@ -178,7 +180,7 @@ export class Menu {
         <button data-act="multi">MULTIPLAYER &nbsp;<span class="dim">race friends online</span></button>
         <button class="ghost" data-act="howto">HOW TO PLAY</button>
         <button class="ghost" data-act="settings">SETTINGS</button>
-        <p class="hint">↑ ↓ ← → ride &nbsp;·&nbsp; A / SPACE fight &nbsp;·&nbsp; M mute</p>`;
+        <p class="hint">↑ ↓ ← → ride &nbsp;·&nbsp; A / SPACE fight &nbsp;·&nbsp; M mute &nbsp;·&nbsp; F fullscreen</p>`;
       case 'multi': return `
         <h2>MULTIPLAYER</h2>
         <label class="lbl">YOUR NAME</label>
@@ -217,7 +219,9 @@ export class Menu {
           <tr><td><kbd>↓</kbd></td><td>brake / reverse pressure</td></tr>
           <tr><td><kbd>←</kbd> <kbd>→</kbd></td><td>steer &amp; lean</td></tr>
           <tr><td><kbd>A</kbd> / <kbd>Space</kbd></td><td>punch — attack the rider beside you</td></tr>
+          <tr><td><kbd>Esc</kbd></td><td>pause (solo)</td></tr>
           <tr><td><kbd>M</kbd></td><td>mute / unmute</td></tr>
+          <tr><td><kbd>F</kbd></td><td>fullscreen</td></tr>
           <tr><td><b>Touch</b></td><td>hold a screen half to steer · on-screen BRAKE + PUNCH · auto-throttle</td></tr>
         </table>
         <h3>THE RULES OF THE ROAD</h3>
@@ -261,6 +265,7 @@ export class Menu {
       ['TRAFFIC', ['NONE', 'LIGHT', 'HEAVY'][S.traffic], 'traffic'],
       ['POLICE', S.police ? 'ON' : 'OFF', 'police'],
       ['BIKE', BIKE_COLORS[S.colorIdx][0], 'bike'],
+      ['GRAPHICS', { auto: 'AUTO', high: 'HIGH', medium: 'MEDIUM', low: 'LOW' }[S.graphics], 'graphics'],
       ['THROTTLE', { auto: 'AUTO', on: 'ALWAYS ON', off: 'MANUAL' }[S.throttle], 'throttle'],
       ['SOUND', S.sound ? 'ON' : 'OFF', 'sound'],
     ];
