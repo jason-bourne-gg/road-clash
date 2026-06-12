@@ -7,6 +7,15 @@
 export type WeaponKey = 'fist' | 'club' | 'chain';
 export type ControllerKind = 'ai' | 'remote';
 export type GameState = 'menu' | 'race' | 'finished';
+export type AiStyle = 'racer' | 'aggressive' | 'blocker';
+export type PickupKind = 'boost' | 'repair' | 'shield';
+
+export interface Pickup {
+  z: number;
+  offset: number;
+  kind: PickupKind;
+  taken: boolean;
+}
 
 // --- pseudo-3D track ---
 export interface Point {
@@ -21,7 +30,7 @@ export interface Segment {
   p2: Point;
   curve: number;
   sprites: RoadSprite[];
-  ents: Array<{ kind: 'rival' | 'traffic' | 'cop'; e: Rider | Traffic | Cop }>;
+  ents: Array<{ kind: 'rival' | 'traffic' | 'cop' | 'pickup'; e: Rider | Traffic | Cop | Pickup }>;
   clip: number;
   fog: number;
   alt: boolean;
@@ -52,7 +61,8 @@ export interface Rider extends Combatant {
   home: number;
   total: number;
   controller: ControllerKind;
-  net?: InterpBuffer; // present only for controller === 'remote'
+  style: AiStyle;      // personality, drives AI behaviour
+  net?: InterpBuffer;  // present only for controller === 'remote'
 }
 
 export type Cop = Combatant;
@@ -72,6 +82,9 @@ export interface Player {
   lap: number; lapTime: number; bestLap: number | null; total: number; weapon: WeaponKey;
   punchT: number; punchDir: number; punchCool: number; hurtT: number; crashT: number; bustedT: number;
   finished: boolean; place: number; finalPlace: number | null;
+  boost: number;     // 0..1 nitro meter
+  boostT: number;    // seconds of active boost remaining
+  shieldT: number;   // seconds of crash immunity remaining
 }
 
 export interface GameMeta {
@@ -102,11 +115,12 @@ export interface World {
   trackLength: number;
   seed: number;
   outbox: OutboxEvent[];
+  pickups: Pickup[];
 }
 
 export interface InputState {
   KEYS: Record<string, boolean>;
-  TOUCH: { steer: number; brake: boolean; punch: boolean };
+  TOUCH: { steer: number; brake: boolean; punch: boolean; boost: boolean };
   touchCapable: boolean;
   touchActive: boolean;
   activePtrs: Record<number, string>;

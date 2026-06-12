@@ -11,6 +11,7 @@ export function makePlayer(): Player {
     lap: 1, lapTime: 0, bestLap: null, total: 0, weapon: 'fist',
     punchT: 0, punchDir: 1, punchCool: 0, hurtT: 0, crashT: 0, bustedT: 0,
     finished: false, place: 8, finalPlace: null,
+    boost: 0, boostT: 0, shieldT: 0,
   };
 }
 
@@ -26,6 +27,7 @@ export const world: World = {
   trackLength: 0,
   seed: 0,
   outbox: [],
+  pickups: [],
 };
 
 export function setMsg(text: string, sec?: number): void {
@@ -35,7 +37,7 @@ export function setMsg(text: string, sec?: number): void {
 
 export const input: InputState = {
   KEYS: {},
-  TOUCH: { steer: 0, brake: false, punch: false },
+  TOUCH: { steer: 0, brake: false, punch: false, boost: false },
   touchCapable: ('ontouchstart' in window) || navigator.maxTouchPoints > 0,
   touchActive: false,
   activePtrs: {},

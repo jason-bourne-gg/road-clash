@@ -2,16 +2,21 @@ import {
   SEG_LEN, PLAYER_Z, MAX_SPEED, ACCEL, BRAKE, DECEL, OFF_DECEL, OFF_LIMIT,
   PUNCH_RANGE_Z, PUNCH_RANGE_X, GRIP_ROAD, GRIP_OFF, CENT_K, SLOPE_PULL, DRAFT_Z, DRAFT_X,
   BIKE_LEN, BIKE_W, CAR_LEN, CAR_W, VAN_W, REL_CRASH_BIKE, REL_CRASH_CAR, WEAPONS, W, H,
+  BOOST_FILL, BOOST_DRAFT_FILL, BOOST_KNOCK_FILL, BOOST_COST, BOOST_DUR, BOOST_SPEED, BOOST_ACCEL,
+  SHIELD_DUR, PICKUP_W, PICKUP_LEN,
 } from '../core/constants';
 import { clamp, lerp, overlap } from '../core/math';
 import { world, setMsg, input } from '../core/state';
 import { S, DIFF } from '../core/settings';
 import { findSegment, relZ, zdist, wrapZ } from './track';
 import { emit, updateParts } from './particles';
-import { sfx, punchSfx, crashSfx, knockSfx, setAudioLevels } from './audio';
+import { sfx, punchSfx, crashSfx, knockSfx, setAudioLevels, boostSfx, pickupSfx, shieldSfx, screechSfx, gearSfx } from './audio';
 import { activeSeason } from './seasons';
 import { bg } from './render';
 import type { Rider, Combatant } from '../core/types';
+
+// Throttled state for feel cues (screech / gear blips) + cop respawn rest.
+let screechCd = 0, lastGear = 0, copRest = 0;
 
 const throttleOn = (): boolean => S.throttle === 'on' || (S.throttle === 'auto' && input.touchActive);
 
@@ -21,6 +26,13 @@ export function currentPlace(): number {
 
 export function crashPlayer(dmg: number, msg: string): void {
   const p = world.player;
+  // A shield absorbs one crash (and the damage) instead of going down.
+  if (p.shieldT > 0) {
+    p.shieldT = 0; p.speed *= 0.85; p.wobbleT = Math.min(1, p.wobbleT + 0.5);
+    shieldSfx(); world.game.flash = 0.5;
+    setMsg('SHIELD ABSORBED!', 1.2);
+    return;
+  }
   p.health = Math.max(0, p.health - dmg);
   p.crashT = 2.2; p.speed *= 0.1; p.weapon = 'fist';
   crashSfx(); world.game.shake = 1;
@@ -61,6 +73,7 @@ export function update(dt: number): void {
   const inBrake = KEYS.ArrowDown || TOUCH.brake;
   const inAccel = (KEYS.ArrowUp || throttleOn()) && !inBrake;
   const inPunch = KEYS.KeyA || KEYS.Space || TOUCH.punch;
+  const inBoost = KEYS.ShiftLeft || KEYS.ShiftRight || KEYS.KeyB || TOUCH.boost;
 
   /* --- player physics --- */
   if (player.crashT > 0) {
@@ -75,6 +88,13 @@ export function update(dt: number): void {
   } else if (!player.finished && racing) {
     const target = inLeft ? -1 : inRight ? 1 : 0;
     player.steerV = lerp(player.steerV, target, 1 - Math.exp(-10 * dt));
+    // --- nitro: fill (faster while drafting), activate, decay ---
+    player.boostT = Math.max(0, player.boostT - dt);
+    player.shieldT = Math.max(0, player.shieldT - dt);
+    player.boost = clamp(player.boost + (player.draft ? BOOST_DRAFT_FILL : BOOST_FILL) * dt, 0, 1);
+    if (inBoost && player.boostT <= 0 && player.boost >= BOOST_COST) {
+      player.boostT = BOOST_DUR; player.boost -= BOOST_COST; boostSfx(); setMsg('NITRO!', 0.7);
+    }
     const offroad = Math.abs(player.x) > 1;
     // Season grip: rainy roads are slippery (vx converges to intent slower).
     const grip = (offroad ? GRIP_OFF : GRIP_ROAD) * activeSeason().gripMult;
@@ -98,19 +118,33 @@ export function update(dt: number): void {
       if (!player.draft) for (const t of traffic) if (!t.oncoming && aheadOf(t) && Math.abs(t.offset - player.x) < DRAFT_X) { player.draft = true; break; }
     }
     if (player.draft && inAccel) player.speed += ACCEL * 0.55 * dt;
+    if (player.boostT > 0) {
+      player.speed += ACCEL * BOOST_ACCEL * dt;
+      emit(W / 2 + (Math.random() - 0.5) * 34, H - 30, 2, { color: '#5ad6ff', vy0: -70, life: 0.4, size: 6, vx: 160 });
+    }
     if (offroad) {
       if (player.speed > OFF_LIMIT) player.speed += OFF_DECEL * dt;
       player.vx += (Math.random() - 0.5) * 0.6 * dt;
       if (player.speed > MAX_SPEED * 0.05)
         emit(W / 2 + Math.sign(player.x) * 40, H - 28, 1, { color: '#b58a5a', vy0: -70, life: 0.6, size: 6, vx: 180 });
     }
-    player.speed = clamp(player.speed, 0, MAX_SPEED * (player.draft ? 1.05 : 1) + (slope < 0 ? MAX_SPEED * 0.04 : 0));
+    const cap = player.boostT > 0 ? BOOST_SPEED : player.draft ? 1.05 : 1;
+    player.speed = clamp(player.speed, 0, MAX_SPEED * cap + (slope < 0 ? MAX_SPEED * 0.04 : 0));
     player.x = clamp(player.x, -2.4, 2.4);
   } else {
     player.steerV = lerp(player.steerV, 0, 1 - Math.exp(-6 * dt));
     if (!racing) player.speed = 0;
     else player.speed = Math.max(0, player.speed + DECEL * dt);
   }
+
+  /* --- feel cues: tyre screech on hard cornering, gear blips climbing speed --- */
+  screechCd = Math.max(0, screechCd - dt);
+  if (racing && player.crashT <= 0 && Math.abs(player.steerV) > 0.72 && spct > 0.5 && Math.abs(player.x) <= 1 && screechCd <= 0) {
+    screechSfx(); screechCd = 0.45;
+  }
+  const gear = Math.floor(spct * 5);
+  if (gear > lastGear && racing && player.crashT <= 0) gearSfx();
+  lastGear = gear;
 
   /* --- player attacking --- */
   player.punchCool = Math.max(0, player.punchCool - dt);
@@ -142,6 +176,9 @@ export function update(dt: number): void {
       }
       if (target.health <= 0) {
         target.knocked = 3; knockSfx();
+        player.boost = Math.min(1, player.boost + BOOST_KNOCK_FILL); // aggression feeds nitro
+        world.game.shake = Math.max(world.game.shake, 0.5);          // satisfying thud
+        emit(W / 2 + player.punchDir * 120, H - 150, 16, { color: '#ffd23b', vy0: -150, life: 0.5, size: 5, vx: 460 });
         if (target === world.cop) { world.heat++; setMsg('COP DOWN! HEAT RISING!', 1.8); }
         else { world.heat++; setMsg(target.name + ' IS DOWN!', 1.6); }
       }
@@ -179,10 +216,29 @@ export function update(dt: number): void {
           dodging = true; break;
         }
       }
+      const aggrMul = c.style === 'aggressive' ? 1.9 : c.style === 'blocker' ? 1.0 : 0.3;
+      /* rider-vs-rider brawl: aggressors/blockers shove a neighbouring rival down */
+      if ((c.style === 'aggressive' || c.style === 'blocker') && racing) {
+        for (const o of riders) {
+          if (o === c || o.knocked > 0) continue;
+          const odz = zdist(o.z, c.z);
+          if (odz > 0 && odz < PUNCH_RANGE_Z * 0.8 && Math.abs(o.offset - c.offset) < PUNCH_RANGE_X &&
+              Math.random() < DIFF().aggr * aggrMul * 0.45 * dt) {
+            c.punchT = 0.3;
+            o.health -= 26; o.wobble = 0.6; o.offset += (Math.sign(o.offset - c.offset) || 1) * 0.3; o.speed *= 0.9;
+            const near = Math.abs(relZ(o.z)) < 4000;
+            if (near) punchSfx();
+            if (o.health <= 0) { o.knocked = 3; o.health = 100; if (near) { knockSfx(); setMsg(c.name + ' downs ' + o.name + '!', 1.2); } }
+            break;
+          }
+        }
+      }
       if (!dodging && racing && Math.abs(dz) < 1400 && player.crashT <= 0 && !player.finished) {
-        c.offset += clamp(player.x - c.offset, -0.5 * dt, 0.5 * dt);
+        // racers hold their line; aggressors & blockers home in on you
+        const chase = c.style === 'racer' ? 0.12 : c.style === 'blocker' ? 0.62 : 0.5;
+        c.offset += clamp(player.x - c.offset, -chase * dt, chase * dt);
         if (Math.abs(dz) < PUNCH_RANGE_Z && Math.abs(c.offset - player.x) < PUNCH_RANGE_X &&
-            Math.random() < DIFF().aggr * dt) {
+            Math.random() < DIFF().aggr * aggrMul * dt) {
           c.punchT = 0.3; punchSfx();
           const dmg = c.weapon === 'club' ? 16 : c.weapon === 'chain' ? 14 : 12;
           player.health -= dmg; player.hurtT = 0.4; game.flash = 1;
@@ -292,7 +348,11 @@ export function update(dt: number): void {
   }
 
   /* --- cop --- */
-  if (!world.cop && S.police && racing && (world.heat >= 2 || (player.lap >= 2 && world.heat >= 1))) spawnCop();
+  copRest = Math.max(0, copRest - dt);
+  const hadCop = !!world.cop;
+  // Heat brings the law early; otherwise a patrol shows up mid-race anyway for fun.
+  if (!world.cop && S.police && racing && copRest <= 0 &&
+      (world.heat >= 2 || (player.lap >= 2 && world.heat >= 1) || game.time > 22)) spawnCop();
   if (world.cop) {
     const cop = world.cop;
     if (cop.knocked > 0) {
@@ -331,6 +391,21 @@ export function update(dt: number): void {
     player.bustedT -= dt;
     if (player.bustedT <= 0 && world.cop) world.cop = null;
   }
+  if (hadCop && !world.cop) copRest = 14; // breather before the next patrol
+
+  /* --- pickups: drive over to collect (local player only) --- */
+  if (player.crashT <= 0 && racing) {
+    for (const pk of world.pickups) {
+      if (pk.taken) continue;
+      if (Math.abs(relZ(pk.z)) < PICKUP_LEN / 2 && Math.abs(pk.offset - player.x) < PICKUP_W) {
+        pk.taken = true; pickupSfx();
+        emit(W / 2, H - 120, 12, { color: '#9fffd0', vy0: -130, life: 0.5, size: 5, vx: 360 });
+        if (pk.kind === 'boost') { player.boost = 1; setMsg('NITRO FULL!', 1.1); }
+        else if (pk.kind === 'repair') { player.health = Math.min(100, player.health + 45); setMsg('REPAIRED!', 1.1); }
+        else { player.shieldT = SHIELD_DUR; shieldSfx(); setMsg('SHIELD UP!', 1.1); }
+      }
+    }
+  }
 
   /* --- track position & laps --- */
   const old = player.position;
@@ -340,6 +415,7 @@ export function update(dt: number): void {
   if (player.position < old && player.speed > 0) {
     if (player.bestLap === null || player.lapTime < player.bestLap) player.bestLap = player.lapTime;
     player.lapTime = 0; player.lap++;
+    for (const pk of world.pickups) pk.taken = false; // respawn pickups each lap
     if (player.lap > S.laps) {
       player.finished = true;
       player.finalPlace = currentPlace();

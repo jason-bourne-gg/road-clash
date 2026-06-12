@@ -73,4 +73,19 @@ export const PACK_SIZE = RIDERS.length;
 export const BTN = {
   brake: { x: 96, y: H - 86, r: 58 },
   punch: { x: W - 96, y: H - 86, r: 58 },
+  boost: { x: W - 96, y: H - 210, r: 46 },
 };
+
+// --- nitro / boost ---
+export const BOOST_FILL = 0.05;        // meter/sec just from racing
+export const BOOST_DRAFT_FILL = 0.16;  // extra meter/sec while drafting
+export const BOOST_KNOCK_FILL = 0.25;  // instant fill for knocking a rider down
+export const BOOST_COST = 0.34;        // meter spent per activation
+export const BOOST_DUR = 1.3;          // seconds of boost
+export const BOOST_SPEED = 1.20;       // top-speed multiplier while boosting
+export const BOOST_ACCEL = 0.8;        // extra accel fraction while boosting
+
+// --- pickups ---
+export const SHIELD_DUR = 6;           // seconds of crash immunity
+export const PICKUP_W = 0.45;          // collision half-width (road-width units)
+export const PICKUP_LEN = 320;         // collision length (world z-units)

@@ -12,7 +12,7 @@ import { poly, rrect, line } from './draw2d';
 import { emit } from './particles';
 import { activeSeason } from './seasons';
 import { gfx } from './quality';
-import type { Segment, Point, Rider, Cop, Traffic, RoadSprite, Season } from '../core/types';
+import type { Segment, Point, Rider, Cop, Traffic, RoadSprite, Season, Pickup } from '../core/types';
 
 // Background parallax offset, advanced by physics, read here.
 export const bg = { pan: 0 };
@@ -108,6 +108,7 @@ export function renderRoad(): void {
   let maxY = H, x = 0, dx = -(baseSeg.curve * basePct);
 
   for (const s of world.segments) s.ents.length = 0;
+  for (const pk of world.pickups) if (!pk.taken) findSegment(pk.z).ents.push({ kind: 'pickup', e: pk });
   for (const c of world.riders) findSegment(c.z).ents.push({ kind: 'rival', e: c });
   for (const t of world.traffic) findSegment(t.z).ents.push({ kind: 'traffic', e: t });
   if (world.cop) findSegment(world.cop.z).ents.push({ kind: 'cop', e: world.cop });
@@ -128,6 +129,7 @@ export function renderRoad(): void {
     const seg = world.segments[(baseSeg.index + n) % world.segments.length];
     for (const en of seg.ents) {
       if (en.kind === 'traffic') drawTraffic(seg, en.e as Traffic);
+      else if (en.kind === 'pickup') drawPickup(seg, en.e as Pickup);
       else drawRider(seg, en.e as Rider | Cop, en.kind === 'cop');
     }
     for (const s of seg.sprites) drawSprite(seg, s, sea);
@@ -233,6 +235,36 @@ function drawTraffic(seg: Segment, t: Traffic): void {
   ctx.save(); ctx.translate(p.x, p.y); ctx.scale(s, s);
   drawCarBody(t);
   ctx.restore();
+}
+
+// Floating, glowing, bobbing collectible on the road.
+function drawPickup(seg: Segment, pk: Pickup): void {
+  if (seg.p1.camera.z <= CAM_DEPTH) return;
+  const p = entScreen(seg, pk.z, pk.offset);
+  if (p.y >= seg.clip + 5) return;
+  const size = Math.max(8, p.w * 0.10);
+  const cx = p.x, cy = p.y - size * 1.3 + Math.sin(world.worldT * 4 + pk.z) * size * 0.25;
+  const col = pk.kind === 'boost' ? '#5ad6ff' : pk.kind === 'repair' ? '#52e08a' : '#ffd23b';
+  const glow = ctx.createRadialGradient(cx, cy, 1, cx, cy, size * 1.9);
+  glow.addColorStop(0, col); glow.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.globalAlpha = 0.5; ctx.fillStyle = glow; ctx.beginPath(); ctx.arc(cx, cy, size * 1.9, 0, 7); ctx.fill(); ctx.globalAlpha = 1;
+  ctx.fillStyle = 'rgba(10,10,16,0.85)'; ctx.beginPath(); ctx.arc(cx, cy, size, 0, 7); ctx.fill();
+  ctx.strokeStyle = col; ctx.lineWidth = Math.max(2, size * 0.16); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  ctx.stroke();
+  ctx.beginPath();
+  if (pk.kind === 'boost') {       // lightning bolt
+    ctx.moveTo(cx + size * 0.18, cy - size * 0.5); ctx.lineTo(cx - size * 0.24, cy + size * 0.04);
+    ctx.lineTo(cx + size * 0.04, cy + size * 0.04); ctx.lineTo(cx - size * 0.18, cy + size * 0.5);
+    ctx.stroke();
+  } else if (pk.kind === 'repair') { // plus
+    ctx.moveTo(cx, cy - size * 0.45); ctx.lineTo(cx, cy + size * 0.45);
+    ctx.moveTo(cx - size * 0.45, cy); ctx.lineTo(cx + size * 0.45, cy); ctx.stroke();
+  } else {                          // shield
+    ctx.moveTo(cx, cy - size * 0.5); ctx.lineTo(cx + size * 0.45, cy - size * 0.18);
+    ctx.lineTo(cx + size * 0.3, cy + size * 0.45); ctx.lineTo(cx, cy + size * 0.55);
+    ctx.lineTo(cx - size * 0.3, cy + size * 0.45); ctx.lineTo(cx - size * 0.45, cy - size * 0.18);
+    ctx.closePath(); ctx.stroke();
+  }
 }
 
 /* ---------------- player ---------------- */

@@ -21,8 +21,16 @@ export function renderHud(): void {
   ctx.fillStyle = player.health > 40 ? '#52c43b' : '#e23b3b';
   ctx.fillRect(24, 62, 208 * clamp(player.health, 0, 100) / 100, 12);
   ctx.strokeStyle = '#fff'; ctx.lineWidth = 1; ctx.strokeRect(22.5, 60.5, 212, 16);
-  ctx.textAlign = 'left'; ctx.font = 'bold 16px monospace'; ctx.fillStyle = '#ffd23b';
-  ctx.fillText(WEAPONS[player.weapon].name, 244, 73);
+  // Nitro meter — pulses cyan/white while active.
+  ctx.fillStyle = 'rgba(0,0,0,0.45)'; ctx.fillRect(22, 80, 212, 12);
+  const boostFull = player.boost >= 0.34;
+  ctx.fillStyle = player.boostT > 0 ? (Math.floor(world.worldT * 20) % 2 ? '#fff' : '#5ad6ff') : (boostFull ? '#5ad6ff' : '#2f6f86');
+  ctx.fillRect(24, 82, 208 * clamp(player.boost, 0, 1), 8);
+  ctx.strokeStyle = '#fff'; ctx.lineWidth = 1; ctx.strokeRect(22.5, 80.5, 212, 12);
+  ctx.textAlign = 'left'; ctx.font = 'bold 11px monospace'; ctx.fillStyle = '#bfefff';
+  ctx.fillText('NITRO', 28, 90);
+  ctx.font = 'bold 16px monospace'; ctx.fillStyle = '#ffd23b';
+  ctx.fillText(WEAPONS[player.weapon].name + (player.shieldT > 0 ? '  🛡' : ''), 244, 73);
 
   if (world.heat > 0 || world.cop) {
     ctx.textAlign = 'right'; ctx.font = 'bold 18px monospace';
@@ -66,6 +74,7 @@ export function renderTouchUI(): void {
   const buttons: Array<[{ x: number; y: number; r: number }, string, boolean]> = [
     [BTN.brake, 'BRAKE', input.TOUCH.brake],
     [BTN.punch, WEAPONS[world.player.weapon].name, input.TOUCH.punch],
+    [BTN.boost, 'NITRO', input.TOUCH.boost],
   ];
   for (const [b, label, active] of buttons) {
     ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, 7);

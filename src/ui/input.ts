@@ -10,18 +10,20 @@ function cPos(e: PointerEvent): { x: number; y: number } {
   return { x: (e.clientX - r.left) * W / r.width, y: (e.clientY - r.top) * H / r.height };
 }
 function roleFor(p: { x: number; y: number }): string {
+  if (Math.hypot(p.x - BTN.boost.x, p.y - BTN.boost.y) < BTN.boost.r + 18) return 'boost';
   if (Math.hypot(p.x - BTN.punch.x, p.y - BTN.punch.y) < BTN.punch.r + 22) return 'punch';
   if (Math.hypot(p.x - BTN.brake.x, p.y - BTN.brake.y) < BTN.brake.r + 22) return 'brake';
   return p.x < W / 2 ? 'left' : 'right';
 }
 function refreshTouch(): void {
   const T = input.TOUCH;
-  T.steer = 0; T.brake = false; T.punch = false;
+  T.steer = 0; T.brake = false; T.punch = false; T.boost = false;
   for (const role of Object.values(input.activePtrs)) {
     if (role === 'left') T.steer = -1;
     else if (role === 'right') T.steer = 1;
     else if (role === 'brake') T.brake = true;
     else if (role === 'punch') T.punch = true;
+    else if (role === 'boost') T.boost = true;
   }
 }
 

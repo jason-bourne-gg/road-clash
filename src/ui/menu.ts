@@ -180,7 +180,7 @@ export class Menu {
         <button data-act="multi">MULTIPLAYER &nbsp;<span class="dim">race friends online</span></button>
         <button class="ghost" data-act="howto">HOW TO PLAY</button>
         <button class="ghost" data-act="settings">SETTINGS</button>
-        <p class="hint">↑ ↓ ← → ride &nbsp;·&nbsp; A / SPACE fight &nbsp;·&nbsp; M mute &nbsp;·&nbsp; F fullscreen</p>`;
+        <p class="hint">↑ ↓ ← → ride &nbsp;·&nbsp; A / SPACE fight &nbsp;·&nbsp; SHIFT nitro &nbsp;·&nbsp; F fullscreen</p>`;
       case 'multi': return `
         <h2>MULTIPLAYER</h2>
         <label class="lbl">YOUR NAME</label>
@@ -219,6 +219,7 @@ export class Menu {
           <tr><td><kbd>↓</kbd></td><td>brake / reverse pressure</td></tr>
           <tr><td><kbd>←</kbd> <kbd>→</kbd></td><td>steer &amp; lean</td></tr>
           <tr><td><kbd>A</kbd> / <kbd>Space</kbd></td><td>punch — attack the rider beside you</td></tr>
+          <tr><td><kbd>Shift</kbd> / <kbd>B</kbd></td><td>nitro boost (when the meter's charged)</td></tr>
           <tr><td><kbd>Esc</kbd></td><td>pause (solo)</td></tr>
           <tr><td><kbd>M</kbd></td><td>mute / unmute</td></tr>
           <tr><td><kbd>F</kbd></td><td>fullscreen</td></tr>
@@ -231,6 +232,8 @@ export class Menu {
           <li><b>Heat &amp; cops</b> — knockdowns raise your HEAT. Too much and the <b>POLICE</b> give chase. Crash while they're close and you're <b>BUSTED</b> (you lose time).</li>
           <li><b>Mind the traffic</b> — it's a two-way road. Oncoming cars are lethal; rear-ending anything fast wipes you out.</li>
           <li><b>Draft</b> — tuck in behind a rider or car for a slipstream speed boost.</li>
+          <li><b>Nitro</b> — your boost meter fills as you race (faster while drafting) and on every knockdown. Tap <kbd>Shift</kbd> to surge past top speed.</li>
+          <li><b>Grab pickups</b> — drive over the glowing icons: <b>⚡ nitro</b>, <b>❤️ repair</b>, <b>🛡️ shield</b> (absorbs your next crash).</li>
           <li><b>Seasons change grip</b> — <b>RAINY</b> roads are slippery, <b>WINTER</b> snow a little; <b>SUMMER</b> has full grip. Pick in Settings.</li>
         </ul>
         <h3>MULTIPLAYER</h3>

@@ -3,6 +3,20 @@
 All notable changes to Road Clash, newest first. Format follows
 [Keep a Changelog](https://keepachangelog.com/); versions are [SemVer](https://semver.org/).
 
+## [2.2.0] — 2026-06-13 · Gameplay engine pass
+
+### Added
+- **Nitro / boost** — a meter that fills as you race (faster while drafting) and on every knockdown. Press **Shift** / **B** (or the on-screen NITRO button) to burst past top speed, with whoosh + flame trail. HUD meter under your health bar.
+- **Road pickups** (seeded, respawn each lap): **⚡ Nitro** (fills boost), **❤️ Repair** (heals), **🛡️ Shield** (absorbs the next crash). Drive over to grab them; glowing, bobbing icons on the road.
+- **Rider-vs-rider brawls** — AI riders now fight *each other*, not just you. Aggressors and blockers shove neighbouring rivals down for a proper pack melee.
+- **AI personalities** — each rival is a **racer** (holds the line, runs faster), **aggressor** (hunts + hits hard), or **blocker** (mirrors you to block).
+- **Police show up mid-race** — the cop now arrives on rising heat *or* automatically partway through a race (with a breather after you shake it), so the chase actually happens.
+- **Richer audio** — nitro whoosh, pickup chime, shield ping, tyre screech on hard cornering, gear-shift blips climbing through the speed range.
+
+### Changed
+- **Knockdowns are juicier** — bigger spark burst + a punch of screen shake.
+- **Redesigned bikes & riders** — proper sportbike silhouette (alloy rim, tapered tail fairing, twin exhausts) and a tucked rider in racing leathers with a team-striped helmet and dark visor.
+
 ## [2.1.0] — 2026-06-13 · Display, quality & analytics
 
 ### Added
@@ -37,5 +51,6 @@ All notable changes to Road Clash, newest first. Format follows
 - Migrated single-file game → modular **TypeScript + Vite** (SOLID seams: Transport / Session / Season / Rider).
 - Deployed to **Vercel** with auto-deploy on every push. ~32 KB gzipped.
 
+[2.2.0]: https://github.com/jason-bourne-gg/road-clash
 [2.1.0]: https://github.com/jason-bourne-gg/road-clash
 [2.0.0]: https://github.com/jason-bourne-gg/road-clash

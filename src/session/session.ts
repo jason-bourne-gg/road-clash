@@ -1,5 +1,6 @@
 import { buildTrack } from '../engine/track';
 import { resetTraffic } from '../entities/traffic';
+import { resetPickups } from '../entities/pickups';
 import { clearParts } from '../engine/particles';
 import { world, input, makePlayer } from '../core/state';
 import { S } from '../core/settings';
@@ -23,12 +24,13 @@ export abstract class Session {
 export function prepareRace(seed: number): void {
   buildTrack(seed);
   resetTraffic(seed);
+  resetPickups(seed);
   world.cop = null; world.heat = 0; clearParts(); world.outbox.length = 0;
   bg.pan = 0;
   Object.assign(world.player, makePlayer(), { x: 0.4 });
   for (const k in input.KEYS) input.KEYS[k] = false;
   for (const k in input.activePtrs) delete input.activePtrs[Number(k)];
-  input.TOUCH.steer = 0; input.TOUCH.brake = false; input.TOUCH.punch = false;
+  input.TOUCH.steer = 0; input.TOUCH.brake = false; input.TOUCH.punch = false; input.TOUCH.boost = false;
   world.game.state = 'race';
   world.game.time = 0; world.game.shake = 0; world.game.flash = 0;
   world.game.msg = ''; world.game.msgT = 0;
