@@ -71,9 +71,9 @@ export const PACK_SIZE = RIDERS.length;
 
 // On-screen touch buttons (shared by HUD rendering and input hit-testing).
 export const BTN = {
-  brake: { x: 96, y: H - 86, r: 58 },
-  punch: { x: W - 96, y: H - 86, r: 58 },
-  boost: { x: W - 96, y: H - 210, r: 46 },
+  brake: { x: 100, y: H - 92, r: 66 },
+  punch: { x: W - 100, y: H - 92, r: 66 },
+  boost: { x: W - 104, y: H - 226, r: 54 },
 };
 
 // --- nitro / boost ---

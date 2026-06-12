@@ -2,6 +2,8 @@ import { S, saveSettings } from '../core/settings';
 import { BIKE_COLORS, DIFFS } from '../core/constants';
 import { SEASONS } from '../engine/seasons';
 import { resizeCanvas } from '../core/view';
+import { input } from '../core/state';
+import { toggleFullscreen } from './input';
 import type { PlayerInfo } from '../core/types';
 
 export interface MenuHandlers {
@@ -137,6 +139,7 @@ export class Menu {
       case 'menu': this.h.toMenu(); break;
       case 'voice': this.h.toggleVoice(); break;
       case 'mic': this.h.toggleMic(); break;
+      case 'fullscreen': toggleFullscreen(); break;
     }
   }
 
@@ -186,6 +189,7 @@ export class Menu {
         <button data-act="multi">MULTIPLAYER &nbsp;<span class="dim">race friends online</span></button>
         <button class="ghost" data-act="howto">HOW TO PLAY</button>
         <button class="ghost" data-act="settings">SETTINGS</button>
+        ${input.touchCapable ? '<button class="ghost" data-act="fullscreen">⛶ FULLSCREEN</button>' : ''}
         <p class="hint">↑ ↓ ← → ride &nbsp;·&nbsp; A / SPACE fight &nbsp;·&nbsp; SHIFT nitro &nbsp;·&nbsp; F fullscreen</p>`;
       case 'multi': return `
         <h2>MULTIPLAYER</h2>

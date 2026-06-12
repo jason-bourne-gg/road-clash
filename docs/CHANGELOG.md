@@ -3,6 +3,19 @@
 All notable changes to Road Clash, newest first. Format follows
 [Keep a Changelog](https://keepachangelog.com/); versions are [SemVer](https://semver.org/).
 
+## [2.4.0] — 2026-06-13 · Mobile polish & installable app (PWA)
+
+### Added
+- **Installable PWA** — "Add to Home Screen" on phones / "Install" on desktop. Launches **standalone** (no browser chrome), with an app icon and **offline solo play** (the app shell is precached via a service worker; updates auto-apply on new deploys).
+- **Rotate-to-landscape prompt** — on a phone held portrait, a clear nudge to rotate (the game is 16:9 landscape).
+- **Fullscreen on touch** — a ⛶ FULLSCREEN button on the title screen (the F key is desktop-only).
+
+### Changed
+- **Bigger touch buttons** — BRAKE / PUNCH / NITRO sized up and spaced for thumbs (touch UI only; desktop unaffected).
+- Added apple/theme meta tags + `viewport-fit=cover` for notch-friendly fullscreen.
+
+[2.4.0]: https://github.com/jason-bourne-gg/road-clash
+
 ## [2.3.0] — 2026-06-13 · Voice chat & music
 
 ### Added

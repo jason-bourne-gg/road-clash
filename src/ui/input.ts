@@ -34,7 +34,7 @@ const isTyping = (): boolean => {
   return t === 'INPUT' || t === 'TEXTAREA';
 };
 
-function toggleFullscreen(): void {
+export function toggleFullscreen(): void {
   if (!document.fullscreenElement) document.documentElement.requestFullscreen?.().catch(() => { /* */ });
   else document.exitFullscreen?.();
 }
