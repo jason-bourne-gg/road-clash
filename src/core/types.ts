@@ -62,6 +62,7 @@ export interface Rider extends Combatant {
   total: number;
   controller: ControllerKind;
   style: AiStyle;      // personality, drives AI behaviour
+  finishTime?: number; // authoritative race-clock time when a remote rider crossed the line
   net?: InterpBuffer;  // present only for controller === 'remote'
 }
 
@@ -81,7 +82,7 @@ export interface Player {
   wobbleT: number; draft: boolean; health: number;
   lap: number; lapTime: number; bestLap: number | null; total: number; weapon: WeaponKey;
   punchT: number; punchDir: number; punchCool: number; hurtT: number; crashT: number; bustedT: number;
-  finished: boolean; place: number; finalPlace: number | null;
+  finished: boolean; place: number; finalPlace: number | null; finishTime: number | null;
   boost: number;     // 0..1 nitro meter
   boostT: number;    // seconds of active boost remaining
   shieldT: number;   // seconds of crash immunity remaining
@@ -145,7 +146,7 @@ export type NetMessage =
   | { t: 'start'; seed: number; season: number; laps: number; diff: number; at: number }
   | { t: 'state'; s: RiderSnapshot }
   | { t: 'hit'; from: string; to: string; dmg: number; knock: number }
-  | { t: 'finished'; place: number; total: number };
+  | { t: 'finished'; place: number; total: number; time: number };
 
 // --- season ---
 export interface Season {

@@ -60,6 +60,7 @@ const handlers: MenuHandlers = {
     session = mp;
     mp.onLobbyChange = () => menu.renderLobby(mp!.lobbyPlayers(), code, true);
     mp.onStarted = () => menu.hide();
+    mp.onRemoteFinish = () => { if (world.game.state === 'finished') showStandings(); };
     history.replaceState(null, '', '?room=' + code);
     menu.showLobby(mp.lobbyPlayers(), code, true);
     try { await mp.connect(code); } catch (e) { console.error('connect failed', e); }
@@ -72,6 +73,7 @@ const handlers: MenuHandlers = {
     session = mp;
     mp.onLobbyChange = () => menu.renderLobby(mp!.lobbyPlayers(), code, false);
     mp.onStarted = () => menu.hide();
+    mp.onRemoteFinish = () => { if (world.game.state === 'finished') showStandings(); };
     menu.showLobby(mp.lobbyPlayers(), code, false);
     try { await mp.connect(code); } catch (e) { console.error('connect failed', e); }
     menu.renderLobby(mp.lobbyPlayers(), code, false);
@@ -112,13 +114,19 @@ const handlers: MenuHandlers = {
 const menu = new Menu(uiRoot, handlers);
 
 function showStandings(): void {
-  const board = [
-    ...world.riders.map(c => ({ name: c.name, total: c.total, me: false })),
-    { name: 'YOU', total: world.player.total, me: true },
-  ].sort((a, b) => b.total - a.total).map(r => ({ name: r.name, me: r.me }));
+  const racers = [
+    ...world.riders.map(c => ({ name: c.name, total: c.total, finishTime: c.finishTime ?? null, me: false })),
+    { name: 'YOU', total: world.player.total, finishTime: world.player.finishTime, me: true },
+  ].sort((a, b) => {
+    // Both crossed the line → the earlier true finish time wins (agrees on every
+    // screen). Otherwise fall back to distance covered, as before.
+    if (a.finishTime != null && b.finishTime != null) return a.finishTime - b.finishTime;
+    return b.total - a.total;
+  });
+  const place = racers.findIndex(r => r.me) + 1;
   menu.showFinished({
-    place: world.player.finalPlace || world.player.place,
-    board,
+    place,
+    board: racers.map(r => ({ name: r.name, me: r.me })),
     isMulti: !!mp,
   });
 }

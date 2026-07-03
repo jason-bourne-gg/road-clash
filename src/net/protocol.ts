@@ -53,7 +53,7 @@ export function parseMessage(raw: unknown): NetMessage | null {
     case 'hit':
       return { t: 'hit', from: str(m.from, 64), to: str(m.to, 64), dmg: clamp(num(m.dmg), 0, 200), knock: clamp(num(m.knock), -2, 2) };
     case 'finished':
-      return { t: 'finished', place: clamp(num(m.place, 1), 1, 99) | 0, total: num(m.total) };
+      return { t: 'finished', place: clamp(num(m.place, 1), 1, 99) | 0, total: num(m.total), time: num(m.time) };
     default:
       return null; // unknown message type — ignore
   }

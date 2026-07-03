@@ -418,6 +418,7 @@ export function update(dt: number): void {
     for (const pk of world.pickups) pk.taken = false; // respawn pickups each lap
     if (player.lap > S.laps) {
       player.finished = true;
+      player.finishTime = game.time;
       player.finalPlace = currentPlace();
       world.game.state = 'finished';
       sfx(880, 0.4, 'square', 0.2);

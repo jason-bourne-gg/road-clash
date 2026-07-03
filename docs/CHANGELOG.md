@@ -3,6 +3,13 @@
 All notable changes to Road Clash, newest first. Format follows
 [Keep a Changelog](https://keepachangelog.com/); versions are [SemVer](https://semver.org/).
 
+## [2.4.1] — 2026-07-04 · Consistent multiplayer finish order
+
+### Fixed
+- **Photo-finish disagreement** — in a close multiplayer finish, each screen could show *its own* player winning, because remote riders are rendered ~120 ms in the past (interpolation). Players now broadcast their **authoritative finish time** when they cross the line, and every screen ranks finishers by that shared time rather than by interpolated position — so all screens agree on the result. Finished riders are pinned to their true final state (no longer overwritten by stale snapshots), and the standings board refreshes if a peer's finish arrives just after your own.
+
+[2.4.1]: https://github.com/jason-bourne-gg/road-clash
+
 ## [2.4.0] — 2026-06-13 · Mobile polish & installable app (PWA)
 
 ### Added

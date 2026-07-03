@@ -10,7 +10,7 @@ export function makePlayer(): Player {
     x: 0, position: 0, speed: 0, steerV: 0, vx: 0, wobbleT: 0, draft: false, health: 100,
     lap: 1, lapTime: 0, bestLap: null, total: 0, weapon: 'fist',
     punchT: 0, punchDir: 1, punchCool: 0, hurtT: 0, crashT: 0, bustedT: 0,
-    finished: false, place: 8, finalPlace: null,
+    finished: false, place: 8, finalPlace: null, finishTime: null,
     boost: 0, boostT: 0, shieldT: 0,
   };
 }

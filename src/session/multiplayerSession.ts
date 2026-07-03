@@ -25,12 +25,14 @@ export class MultiplayerSession extends Session {
   private me: PlayerInfo;
   private playersById = new Map<string, PlayerInfo>(); // remote peers only
   private sendAcc = 0;
+  private sentFinish = false;
 
   readonly voice: VoiceManager;
 
   // UI hooks
   onLobbyChange: () => void = () => {};
   onStarted: () => void = () => {};
+  onRemoteFinish: () => void = () => {};
 
   constructor(transport: Transport, me: PlayerInfo, isHost: boolean) {
     super();
@@ -89,13 +91,21 @@ export class MultiplayerSession extends Session {
       case 'hit':
         if (m.to === this.transport.id) this.takeHit(m.dmg, m.knock);
         break;
-      case 'finished':
-        break; // standings handled locally for v1
+      case 'finished': {
+        // Authoritative finish from a peer: pin their final total + finish time
+        // (stops interpolation overwriting it) so standings rank by true finish
+        // time, not the ~120ms-stale interpolated position.
+        const r = world.riders.find(rr => rr.id === peer);
+        if (r) { r.finishTime = m.time; r.total = m.total; }
+        if (world.game.state === 'finished') this.onRemoteFinish(); // refresh board if we already finished
+        break;
+      }
     }
   }
 
   private applyStart(m: Extract<NetMessage, { t: 'start' }>): void {
     this.started = true;
+    this.sentFinish = false;
     S.season = m.season; S.laps = m.laps; S.diff = m.diff;
     prepareRace(m.seed);
     const peers = [...this.playersById.values()];
@@ -106,7 +116,9 @@ export class MultiplayerSession extends Session {
   }
 
   beforeSim(now: number): void {
-    for (const r of world.riders) if (r.controller === 'remote') applyInterpolated(r, now);
+    // Finished remote riders are pinned to their authoritative final state, so
+    // don't overwrite them with (now-stale) interpolated snapshots.
+    for (const r of world.riders) if (r.controller === 'remote' && r.finishTime == null) applyInterpolated(r, now);
   }
 
   afterSim(dt: number): void {
@@ -121,6 +133,17 @@ export class MultiplayerSession extends Session {
         this.transport.send({ t: 'hit', from: this.transport.id, to: e.id, dmg: e.dmg, knock: e.knock });
       }
       world.outbox.length = 0;
+    }
+    // Announce my authoritative finish once (reliable channel) so every peer can
+    // rank the finish line by true finish time instead of interpolated position.
+    if (world.player.finished && !this.sentFinish) {
+      this.sentFinish = true;
+      this.transport.send({
+        t: 'finished',
+        place: world.player.finalPlace || world.player.place,
+        total: world.player.total,
+        time: world.player.finishTime ?? world.game.time,
+      });
     }
   }
 
