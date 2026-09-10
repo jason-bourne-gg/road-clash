@@ -40,14 +40,29 @@ describe('formatting', () => {
     expect(pad(123, 2)).toBe('123'); // never truncates
   });
 
-  // ord() is used for race positions, which are single-digit in practice.
   it('ord gives the right suffix for finishing positions', () => {
     expect(ord(1)).toBe('1st');
     expect(ord(2)).toBe('2nd');
     expect(ord(3)).toBe('3rd');
     expect(ord(4)).toBe('4th');
     expect(ord(8)).toBe('8th');
+  });
+
+  it('ord handles the 11/12/13 exception', () => {
     expect(ord(11)).toBe('11th');
+    expect(ord(12)).toBe('12th');
+    expect(ord(13)).toBe('13th');
+    expect(ord(14)).toBe('14th');
+  });
+
+  it('ord handles the twenties and beyond', () => {
+    expect(ord(21)).toBe('21st');
+    expect(ord(22)).toBe('22nd');
+    expect(ord(23)).toBe('23rd');
+    expect(ord(24)).toBe('24th');
+    expect(ord(101)).toBe('101st');
+    expect(ord(111)).toBe('111th');
+    expect(ord(112)).toBe('112th');
   });
 
   it('fmtTime renders m:ss.d', () => {
