@@ -5,7 +5,14 @@ export const easeIn = (a: number, b: number, t: number) => a + (b - a) * t * t;
 export const easeInOut = (a: number, b: number, t: number) => a + (b - a) * ((-Math.cos(t * Math.PI) / 2) + 0.5);
 export const fogAmt = (t: number, d: number) => 1 / Math.pow(Math.E, t * t * d);
 export const pad = (n: number, l: number) => String(n).padStart(l, '0');
-export const ord = (n: number) => n + (({ 1: 'st', 2: 'nd', 3: 'rd' } as Record<number, string>)[n] || 'th');
+// English ordinal suffix. 11/12/13 are the exception that breaks the naive
+// last-digit rule ("11th", not "11st"), and it repeats every century (111th).
+export const ord = (n: number) => {
+  const teens = Math.abs(n) % 100;
+  if (teens >= 11 && teens <= 13) return n + 'th';
+  const suffix = ({ 1: 'st', 2: 'nd', 3: 'rd' } as Record<number, string>)[Math.abs(n) % 10] || 'th';
+  return n + suffix;
+};
 
 export function fmtTime(t: number): string {
   const m = Math.floor(t / 60), s = Math.floor(t % 60), d = Math.floor((t * 10) % 10);
