@@ -1,5 +1,7 @@
 # 🏍️ Road Clash
 
+[![CI](https://github.com/jason-bourne-gg/road-clash/actions/workflows/ci.yml/badge.svg)](https://github.com/jason-bourne-gg/road-clash/actions/workflows/ci.yml)
+
 A pseudo-3D, **Road Rash–style combat racer** that runs entirely in the browser. Race AI rivals solo, or **create a room, share the link, and brawl with friends online** — no install, no game server, no accounts.
 
 **Play it:** https://road-clash.vercel.app
