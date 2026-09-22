@@ -50,6 +50,20 @@ A pseudo-3D, **Road Rash–style combat racer** that runs entirely in the browse
 
 ---
 
+## 🧱 Design
+
+**TypeScript · Vite · Canvas 2D · WebRTC.** No frameworks, no rendering libraries.
+
+- **`Transport` interface** — sessions depend on an abstraction, never on Trystero. Swapping P2P for a relay is one new file.
+- **`Session` strategy** — solo and multiplayer are interchangeable to the main loop.
+- **Uniform riders** — an AI rider and a networked human are the same shape; the renderer can't tell them apart.
+- **Seeded RNG** — every peer builds an identical track from the host's seed.
+
+Client-side prediction keeps controls local-feeling; remotes are interpolated
+120 ms in the past to hide jitter. [The full picture](docs/ARCHITECTURE.md).
+
+---
+
 ## 🛠️ Develop
 
 Requires Node 20+.
